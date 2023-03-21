@@ -89,7 +89,7 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      <h1 className="text-center mt-4">Workout Planner</h1>
+      <h1 className="text-center mt-4">Exercise Planner</h1>
       {Object.keys(workouts).length === 0 &&
         <Container className="border border-primary rounded mt-4 p-4">
           <Row className="align-items-center">
