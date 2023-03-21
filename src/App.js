@@ -136,6 +136,10 @@ function App() {
         <Alert.Heading>Error opening file</Alert.Heading>
         Please check if the file you are trying to load was saved using the exercise planner
       </Alert>
+      <Alert className='rounded-0' key='danger' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
+        <Alert.Heading>Error saving file</Alert.Heading>
+        Please try again
+      </Alert>
 
       {
         Object.keys(workouts).length === 0 &&
