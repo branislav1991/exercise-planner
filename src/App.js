@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
+import { Alert, Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
 import './App.css';
 import RadioButtonGroup from './RadioButtonGroup';
 import Calendar from './Calendar';
+import Navigation from './Navigation';
 
 function App() {
   const frequencyOptions = [{ 'label': '3x', 'value': '3' }, { 'label': '4x', 'value': '4' }, { 'label': '5x', 'value': '5' }]
@@ -18,6 +19,7 @@ function App() {
     }
     return [];
   });
+
   const [workouts, setWorkouts] = useState(() => {
     const workoutsLocal = window.localStorage.getItem('workouts');
     if (workoutsLocal !== null) {
@@ -29,6 +31,7 @@ function App() {
     }
     return {};
   });
+
   const [selectedFrequency, setSelectedFrequency] = useState(frequencyOptions[0].value);
   const [selectedPlanLength, setSelectedPlanLength] = useState(planLengthOptions[0].value);
   const [startDate, setStartDate] = useState('');
@@ -36,6 +39,8 @@ function App() {
   const [selectedExerciseType, setSelectedExerciseType] = useState('');
   const [selectedExerciseSet, setSelectedExerciseSet] = useState(null);
   const [selectedExerciseReps, setSelectedExerciseReps] = useState(null);
+  const [showFileOpenAlert, setShowFileOpenAlert] = useState(false);
+  const [showFileSaveAlert, setShowFileSaveAlert] = useState(false);
   const [showReset, setShowReset] = useState(false);
 
   useEffect(() => {
@@ -67,6 +72,43 @@ function App() {
     setSelectedWorkout(selectedWorkout);
   }
 
+  const loadPlanFromFile = async () => {
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'Exercise Planner Files', accept: { 'application/json': ['.json'] } }] });
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      const plan = JSON.parse(text);
+      Object.keys(plan.workouts).forEach((key) => {
+        plan.workouts[key].date = new Date(plan.workouts[key].date);
+      })
+      setWorkouts(plan.workouts);
+      setExercises(plan.exercises);
+      setSelectedWorkout(null);
+    } catch (e) {
+      setShowFileOpenAlert(true);
+      console.log(e);
+    }
+  }
+
+  const savePlanToFile = async () => {
+    try {
+      const plan = { workouts, exercises };
+      const fileHandle = await window.showSaveFilePicker({
+        types: [{
+          description: 'Exercise Planner Files',
+          accept: {
+            'application/json': ['.json'],
+          },
+        }],
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(plan));
+      await writable.close();
+    } catch (e) {
+      setShowFileSaveAlert(true);
+    }
+  }
+
   return (
     <>
       <Modal show={showReset} onHide={() => setShowReset(false)}>
@@ -89,8 +131,14 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      <h1 className="text-center mt-4">Exercise Planner</h1>
-      {Object.keys(workouts).length === 0 &&
+      <Navigation onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
+      <Alert className='rounded-0' key='danger' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
+        <Alert.Heading>Error opening file</Alert.Heading>
+        Please check if the file you are trying to load was saved using the exercise planner
+      </Alert>
+
+      {
+        Object.keys(workouts).length === 0 &&
         <Container className="border border-primary rounded mt-4 p-4">
           <Row className="align-items-center">
             <Col>Workout frequency:</Col>
@@ -117,20 +165,10 @@ function App() {
           </Row>
         </Container>
       }
-      {Object.keys(workouts).length > 0 &&
+      {
+        Object.keys(workouts).length > 0 &&
         <Container className="border border-primary rounded mt-4 p-4">
-          <Row className="align-items-center">
-            <Col>
-              <Calendar highlightDates={Object.entries(workouts).map(([date, workout]) => date)} greenDates={Object.entries(workouts).map(([date, workout]) => workout.completed ? date : null)} handleClick={(date) => setSelectedWorkout(workouts[date])} />
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button variant="danger" className="mt-4" onClick={() => {
-                setShowReset(true);
-              }}>Reset</Button>
-            </Col>
-          </Row>
+          <Calendar highlightDates={Object.entries(workouts).map(([date, workout]) => date)} greenDates={Object.entries(workouts).map(([date, workout]) => workout.completed ? date : null)} handleClick={(date) => setSelectedWorkout(workouts[date])} />
         </Container>
       }
       {selectedWorkout &&
