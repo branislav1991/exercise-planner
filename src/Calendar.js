@@ -78,8 +78,8 @@ const Calendar = ({ greenDates, highlightDates, handleClick }) => {
                     </Col>
                 </Row>
             </Container>
-            <Container className='custom-grid'>
-                <Row>
+            <Container className='calendar'>
+                <Row className='daysOfWeek'>
                     {daysOfWeek.map((day, idx) => (
                         <Col key={idx} className="text-center">
                             {day}

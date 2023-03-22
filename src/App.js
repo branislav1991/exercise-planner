@@ -132,11 +132,11 @@ function App() {
       </Modal>
 
       <Navigation onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
-      <Alert className='rounded-0' key='danger' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
+      <Alert className='rounded-0' key='file-open-alert' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
         <Alert.Heading>Error opening file</Alert.Heading>
         Please check if the file you are trying to load was saved using the exercise planner
       </Alert>
-      <Alert className='rounded-0' key='danger' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
+      <Alert className='rounded-0' key='file-save-alert' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
         <Alert.Heading>Error saving file</Alert.Heading>
         Please try again
       </Alert>
