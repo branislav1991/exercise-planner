@@ -24,7 +24,8 @@ function App() {
   const [showFileOpenAlert, setShowFileOpenAlert] = useState(false);
   const [showFileSaveAlert, setShowFileSaveAlert] = useState(false);
   const [showReset, setShowReset] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -33,13 +34,36 @@ function App() {
         const payload = await response.json();
         const { clientPrincipal } = payload;
         if (clientPrincipal) {
-          setUser(clientPrincipal.userId);
+          // setUserId(clientPrincipal.userId);
+          setUserName(clientPrincipal.userDetails)
         }
       } catch (error) {
         console.error(error);
       }
     };
     getUser();
+
+    const list = async () => {
+      const query = `
+      {
+        people {
+          items {
+            id
+            Name
+          }
+        }
+      }`;
+
+      const endpoint = "/data-api/graphql";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+      });
+      const result = await response.json();
+      console.table(result.data.people.items);
+    };
+    list();
   }, []);
 
   const createPlan = () => {
@@ -125,7 +149,7 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      <Navigation user={user} onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
+      <Navigation user={userName} onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
       <Alert className='rounded-0' key='file-open-alert' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
         <Alert.Heading>Error opening file</Alert.Heading>
         Please check if the file you are trying to load was saved using the exercise planner
