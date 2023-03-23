@@ -12,26 +12,8 @@ function App() {
   const exerciseSetOptions = [{ 'label': '1', 'value': '1' }, { 'label': '2', 'value': '2' }, { 'label': '3', 'value': '3' }, { 'label': '4', 'value': '4' }, { 'label': '5', 'value': '5' }, { 'label': '6', 'value': '6' }]
   const exerciseRepsOptions = [{ 'label': '3', 'value': '3' }, { 'label': '4', 'value': '4' }, { 'label': '5', 'value': '5' }, { 'label': '6', 'value': '6' }, { 'label': '8', 'value': '8' }, { 'label': '10', 'value': '10' }, { 'label': '12', 'value': '12' }, { 'label': '16', 'value': '16' }, { 'label': '20', 'value': '20' }, { 'label': '25', 'value': '25' }, { 'label': '30', 'value': '30' }, { 'label': '40', 'value': '40' }, { 'label': '50', 'value': '50' }]
 
-  const [exercises, setExercises] = useState(() => {
-    const exercisesLocal = window.localStorage.getItem('exercises');
-    if (exercisesLocal !== null) {
-      return JSON.parse(exercisesLocal);
-    }
-    return [];
-  });
-
-  const [workouts, setWorkouts] = useState(() => {
-    const workoutsLocal = window.localStorage.getItem('workouts');
-    if (workoutsLocal !== null) {
-      const workoutsParsed = JSON.parse(workoutsLocal);
-      Object.keys(workoutsParsed).forEach((key) => {
-        workoutsParsed[key].date = new Date(workoutsParsed[key].date);
-      })
-      return workoutsParsed;
-    }
-    return {};
-  });
-
+  const [exercises, setExercises] = useState([]);
+  const [workouts, setWorkouts] = useState({});
   const [selectedFrequency, setSelectedFrequency] = useState(frequencyOptions[0].value);
   const [selectedPlanLength, setSelectedPlanLength] = useState(planLengthOptions[0].value);
   const [startDate, setStartDate] = useState('');
@@ -42,11 +24,23 @@ function App() {
   const [showFileOpenAlert, setShowFileOpenAlert] = useState(false);
   const [showFileSaveAlert, setShowFileSaveAlert] = useState(false);
   const [showReset, setShowReset] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    window.localStorage.setItem('exercises', JSON.stringify(exercises));
-    window.localStorage.setItem('workouts', JSON.stringify(workouts));
-  }, [exercises, workouts]);
+    const getUser = async () => {
+      try {
+        const response = await fetch('/.auth/me');
+        const payload = await response.json();
+        const { clientPrincipal } = payload;
+        if (clientPrincipal) {
+          setUser(clientPrincipal.userId);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getUser();
+  }, []);
 
   const createPlan = () => {
     let newWorkouts = {};
@@ -131,7 +125,7 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      <Navigation onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
+      <Navigation user={user} onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
       <Alert className='rounded-0' key='file-open-alert' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
         <Alert.Heading>Error opening file</Alert.Heading>
         Please check if the file you are trying to load was saved using the exercise planner
