@@ -1,39 +1,9 @@
-{
-  "$schema": "https://dataapibuilder.azureedge.net/schemas/latest/dab.draft.schema.json",
-  "data-source": {
-    "database-type": "cosmosdb_nosql",
-    "options": {
-      "database": "exercise-planner-db",
-      "schema": "staticwebapp.database.schema.gql"
-    },
-    "connection-string": "AccountEndpoint=https://exercise-planner.documents.azure.com:443/;AccountKey=CTXkZAumiGLmXGhTC3dUUybznHHuh89ddfolGerO1emJsUzyeDabKLLGGk7yWTQ8rmKU1K4qBfGJACDbZHpxTw==;"
-  },
-  "runtime": {
-    "graphql": {
-      "allow-introspection": true,
-      "enabled": true,
-      "path": "/graphql"
-    },
-    "host": {
-      "mode": "production",
-      "cors": {
-        "origins": ["http://localhost:4280"],
-        "allow-credentials": false
-      },
-      "authentication": {
-        "provider": "StaticWebApps"
-      }
-    }
-  },
-  "entities": {
-    "Person": {
-      "source": "exercise-planner-container",
-      "permissions": [
-        {
-          "actions": ["*"],
-          "role": "anonymous"
-        }
-      ]
-    }
-  }
+type Workout @model {
+  id: ID!
+  name: String!
+  key: String!
+  userId: String!
+  date: String!
+  completed: Boolean!
+  exercises: String!
 }

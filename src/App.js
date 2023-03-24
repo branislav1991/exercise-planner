@@ -4,6 +4,7 @@ import './App.css';
 import RadioButtonGroup from './RadioButtonGroup';
 import Calendar from './Calendar';
 import Navigation from './Navigation';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const frequencyOptions = [{ 'label': '3x', 'value': '3' }, { 'label': '4x', 'value': '4' }, { 'label': '5x', 'value': '5' }]
@@ -13,7 +14,7 @@ function App() {
   const exerciseRepsOptions = [{ 'label': '3', 'value': '3' }, { 'label': '4', 'value': '4' }, { 'label': '5', 'value': '5' }, { 'label': '6', 'value': '6' }, { 'label': '8', 'value': '8' }, { 'label': '10', 'value': '10' }, { 'label': '12', 'value': '12' }, { 'label': '16', 'value': '16' }, { 'label': '20', 'value': '20' }, { 'label': '25', 'value': '25' }, { 'label': '30', 'value': '30' }, { 'label': '40', 'value': '40' }, { 'label': '50', 'value': '50' }]
 
   const [exercises, setExercises] = useState([]);
-  const [workouts, setWorkouts] = useState({});
+  const [workouts, setWorkouts] = useState([]);
   const [selectedFrequency, setSelectedFrequency] = useState(frequencyOptions[0].value);
   const [selectedPlanLength, setSelectedPlanLength] = useState(planLengthOptions[0].value);
   const [startDate, setStartDate] = useState('');
@@ -24,7 +25,7 @@ function App() {
   const [showFileOpenAlert, setShowFileOpenAlert] = useState(false);
   const [showFileSaveAlert, setShowFileSaveAlert] = useState(false);
   const [showReset, setShowReset] = useState(false);
-  // const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ function App() {
         const payload = await response.json();
         const { clientPrincipal } = payload;
         if (clientPrincipal) {
-          // setUserId(clientPrincipal.userId);
+          setUserId(clientPrincipal.userId);
           setUserName(clientPrincipal.userDetails)
         }
       } catch (error) {
@@ -43,51 +44,194 @@ function App() {
     };
     getUser();
 
-    const list = async () => {
-      const query = `
-      {
-        people {
-          items {
-            id
-            Name
-          }
-        }
-      }`;
+    // const getWorkouts = async () => {
+    //   const gql = `
+    //   {
+    //     workouts(filter: {userId: {eq: "anonymous"}}) {
+    //       items {
+    //         id
+    //         name
+    //         key
+    //         userId
+    //         date
+    //         completed
+    //         exercises
+    //       }
+    //     }
+    //   }`;
 
-      const endpoint = "/data-api/graphql";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
-      });
-      const result = await response.json();
-      console.table(result.data.people.items);
-    };
-    list();
+    //   const endpoint = "/data-api/graphql";
+    //   const response = await fetch(endpoint, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ query: gql })
+    //   });
+    //   const result = await response.json();
+    //   console.table(result.data.workouts.items);
+    // };
+    // getWorkouts();
+
+    // // Update workout
+    // const updateWorkouts = async () => {
+    //   const id = "1"
+    //   const data = {
+    //     id: id,
+    //     name: "Workout 1",
+    //     key: "workout-1",
+    //     userId: "Albert",
+    //     date: "2021-01-01",
+    //     completed: true,
+    //     exercises: JSON.stringify([
+    //       {
+    //         name: "Push Ups",
+    //         sets: "3",
+    //         reps: "10"
+    //       }
+    //     ])
+    //   };
+
+    //   const gql = `
+    //     mutation update($id: ID!, $_partitionKeyValue: String!, $item: UpdateWorkoutInput!) {
+    //       updateWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue, item: $item) {
+    //         id
+    //         name
+    //         key
+    //         userId
+    //         date
+    //         completed
+    //         exercises
+    //       }
+    //     }`;
+
+    //   const query = {
+    //     query: gql,
+    //     variables: {
+    //       id: id,
+    //       _partitionKeyValue: id,
+    //       item: data
+    //     }
+    //   };
+
+    //   const endpoint = "/data-api/graphql";
+    //   const res = await fetch(endpoint, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(query)
+    //   });
+
+    //   const result = await res.json();
+    //   console.table(result.data.updateWorkout);
+    // };
+    // updateWorkouts();
+
+    // // Create workout
+    // const newUuid = uuidv4();
+    // const createWorkout = async () => {
+    //   const data = {
+    //     id: newUuid,
+    //     name: "Workout 2",
+    //     key: "workout-2",
+    //     userId: "Roberto",
+    //     date: "2021-01-02",
+    //     completed: true,
+    //     exercises: JSON.stringify([
+    //       {
+    //         name: "Cat-Cow",
+    //         sets: "3",
+    //         reps: "10"
+    //       }
+    //     ])
+    //   };
+
+    //   const gql = `
+    //     mutation create($item: CreateWorkoutInput!) {
+    //       createWorkout(item: $item) {
+    //         id
+    //         name
+    //         key
+    //         userId
+    //         date
+    //         completed
+    //         exercises
+    //       }
+    //     }`;
+
+    //   const query = {
+    //     query: gql,
+    //     variables: {
+    //       item: data
+    //     }
+    //   };
+
+    //   const endpoint = "/data-api/graphql";
+    //   const result = await fetch(endpoint, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(query)
+    //   });
+
+    //   const response = await result.json();
+    //   console.table(response.data.createPerson);
+    // };
+    // createWorkout();
+
+    // const deleteWorkout = async () => {
+    //   const gql = `
+    //     mutation del($id: ID!, $_partitionKeyValue: String!) {
+    //       deleteWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue) {
+    //         id
+    //       }
+    //     }`;
+
+    //   const query = {
+    //     query: gql,
+    //     variables: {
+    //       id: newUuid,
+    //       _partitionKeyValue: newUuid
+    //     }
+    //   };
+
+    //   const endpoint = "/data-api/graphql";
+    //   const response = await fetch(endpoint, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(query)
+    //   });
+
+    //   const result = await response.json();
+    //   console.log(`Record deleted: ${JSON.stringify(result.data)}`);
+    // };
+    // deleteWorkout();
   }, []);
 
   const createPlan = () => {
-    let newWorkouts = {};
+    let newWorkouts = [];
     const selectedPlanLengthInt = parseInt(selectedPlanLength);
     const selectedFrequencyInt = parseInt(selectedFrequency);
     for (let i = 0; i < selectedPlanLengthInt * selectedFrequencyInt; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(currentDate.getDate() + i * 7 / selectedFrequencyInt);
       currentDate.setHours(0, 0, 0, 0);
-      newWorkouts[currentDate] = { name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false, exercises: [] }
+      newWorkouts.push({ id: uuidv4(), userId: userId, name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false });
     }
     setWorkouts(newWorkouts);
   };
 
   const addExercise = () => {
-    setExercises([...exercises, { name: selectedExerciseType, workout: selectedWorkout.name, sets: selectedExerciseSet, reps: selectedExerciseReps }]);
+    setExercises([...exercises, { name: selectedExerciseType, workout: selectedWorkout.id, sets: selectedExerciseSet, reps: selectedExerciseReps }]);
   };
 
   const setWorkoutCompleted = () => {
-    const newWorkouts = { ...workouts };
-    newWorkouts[selectedWorkout.date].completed = !newWorkouts[selectedWorkout.date].completed;
+    const newWorkouts = workouts.map((workout) => {
+      if (workout.id === selectedWorkout.id) {
+        return { ...workout, completed: !workout.completed };
+      }
+      else {
+        return workout;
+      }
+    });
     setWorkouts(newWorkouts);
-    setSelectedWorkout(selectedWorkout);
+    setSelectedWorkout(newWorkouts.find((workout) => workout.id === selectedWorkout.id));
   }
 
   const loadPlanFromFile = async () => {
@@ -96,9 +240,10 @@ function App() {
       const file = await fileHandle.getFile();
       const text = await file.text();
       const plan = JSON.parse(text);
-      Object.keys(plan.workouts).forEach((key) => {
-        plan.workouts[key].date = new Date(plan.workouts[key].date);
-      })
+      plan.workouts.map((workout) => {
+        workout.date = new Date(workout.date);
+        return workout;
+      });
       setWorkouts(plan.workouts);
       setExercises(plan.exercises);
       setSelectedWorkout(null);
@@ -160,7 +305,7 @@ function App() {
       </Alert>
 
       {
-        Object.keys(workouts).length === 0 &&
+        workouts.length === 0 &&
         <Container className="border border-primary rounded mt-4 p-4">
           <Row className="align-items-center">
             <Col>Workout frequency:</Col>
@@ -188,9 +333,9 @@ function App() {
         </Container>
       }
       {
-        Object.keys(workouts).length > 0 &&
+        workouts.length > 0 &&
         <Container className="border border-primary rounded mt-4 p-4">
-          <Calendar highlightDates={Object.entries(workouts).map(([date, workout]) => date)} greenDates={Object.entries(workouts).map(([date, workout]) => workout.completed ? date : null)} handleClick={(date) => setSelectedWorkout(workouts[date])} />
+          <Calendar highlightDates={workouts.map((workout) => workout.date)} greenDates={workouts.map((workout) => workout.completed ? workout.date : null)} handleClick={(date) => { setSelectedWorkout(workouts.find((workout) => workout.date.toDateString() === date.toDateString())) }} />
         </Container>
       }
       {selectedWorkout &&
@@ -239,7 +384,7 @@ function App() {
           <Row className="mt-4 align-items-center">
             <Col>
               <Stack gap={3}>
-                {exercises.map((exercise, index) => (exercise.workout === selectedWorkout.name) ? <div key={index}>{exercise.name} - {exercise.sets} Sets @ {exercise.reps} Reps</div> : null)}
+                {exercises.map((exercise, index) => (exercise.workout === selectedWorkout.id) ? <div key={index}>{exercise.name} - {exercise.sets} Sets @ {exercise.reps} Reps</div> : null)}
               </Stack>
             </Col>
           </Row>
