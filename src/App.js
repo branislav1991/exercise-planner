@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
+import { Alert, Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
 import './App.css';
 import RadioButtonGroup from './RadioButtonGroup';
 import Calendar from './Calendar';
@@ -29,6 +29,9 @@ function App() {
   const [userName, setUserName] = useState(null);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
 
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
     const getUser = async () => {
       try {
@@ -43,7 +46,8 @@ function App() {
           setLoadingWorkouts(true);
         }
       } catch (error) {
-        console.error(error);
+        setErrorMessage('Could not load user data. Please try again later.');
+        setShowError(true);
       }
     };
     getUser();
@@ -91,9 +95,9 @@ function App() {
           setExercises(userExercises);
           setSelectedWorkout(null);
           setLoadingWorkouts(false);
-
         } catch (error) {
-          console.error(error);
+          setErrorMessage('Could not load user workouts. Please try again later.');
+          setShowError(true);
         }
       };
       getWorkouts();
@@ -133,7 +137,8 @@ function App() {
         body: JSON.stringify(query)
       });
     } catch (error) {
-      console.error(error);
+      setErrorMessage('Could not sync workouts with the server. Please try again later.');
+      setShowError(true);
     }
   };
 
@@ -172,7 +177,8 @@ function App() {
         body: JSON.stringify(query)
       });
     } catch (error) {
-      console.error(error);
+      setErrorMessage('Could not sync workouts with the server. Please try again later.');
+      setShowError(true);
     }
   };
 
@@ -201,7 +207,8 @@ function App() {
           body: JSON.stringify(query)
         });
       } catch (error) {
-        console.error(error);
+        setErrorMessage('Could not sync workouts with the server. Please try again later.');
+        setShowError(true);
       }
     });
   }
@@ -276,11 +283,6 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      {/* <Alert className='rounded-0' key='file-save-alert' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
-        <Alert.Heading>Error saving file</Alert.Heading>
-        Please try again
-      </Alert> */}
-
       {
         !userId &&
         <Container
@@ -295,50 +297,51 @@ function App() {
         </Container>
       }
 
-      {
-        userId && loadingWorkouts &&
+      {userId && loadingWorkouts &&
         <LoadingCard />
       }
 
-      {
-        userId && !loadingWorkouts &&
-        <>
-          <Navigation user={userName} onReset={() => { setShowReset(true); }} />
+      {userId && !loadingWorkouts &&
+        <Navigation user={userName} onReset={() => { setShowReset(true); }} />
+      }
 
-          {workouts.length === 0 &&
-            <Container className="border border-primary rounded mt-4 p-4">
-              <Row className="align-items-center">
-                <Col>Workout frequency:</Col>
-                <Col>
-                  <RadioButtonGroup name="frequency" options={frequencyOptions} selectedOption={selectedFrequency} handleChange={(event) => { setSelectedFrequency(event.target.value) }} />
-                </Col>
-              </Row>
-              <Row className="mt-4 align-items-center">
-                <Col>Plan length:</Col>
-                <Col>
-                  <RadioButtonGroup name="planLength" options={planLengthOptions} selectedOption={selectedPlanLength} handleChange={(event) => { setSelectedPlanLength(event.target.value) }} />
-                </Col>
-              </Row>
-              <Row className="mt-4 align-items-center">
-                <Col>Starting date:</Col>
-                <Col>
-                  <Form.Control type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-                </Col>
-              </Row>
-              <Row className="mt-4 align-items-center">
-                <Col>
-                  <Button variant="primary" disabled={startDate === ""} onClick={createPlan}>Create Plan</Button>
-                </Col>
-              </Row>
-            </Container>
-          }
-          {
-            workouts.length > 0 &&
-            <Container className="border border-primary rounded mt-4 p-4">
-              <Calendar highlightDates={workouts.map((workout) => workout.date)} greenDates={workouts.map((workout) => workout.completed ? workout.date : null)} handleClick={(date) => { setSelectedWorkout(workouts.find((workout) => workout.date.toDateString() === date.toDateString())) }} />
-            </Container>
-          }
-        </>
+      <Alert className='rounded-0' key='file-save-alert' variant='danger' show={showError} onClose={() => setShowError(false)} dismissible>
+        <Alert.Heading>Error</Alert.Heading>
+        {errorMessage}
+      </Alert>
+
+      {userId && !loadingWorkouts && workouts.length === 0 &&
+        <Container className="border border-primary rounded mt-4 p-4">
+          <Row className="align-items-center">
+            <Col>Workout frequency:</Col>
+            <Col>
+              <RadioButtonGroup name="frequency" options={frequencyOptions} selectedOption={selectedFrequency} handleChange={(event) => { setSelectedFrequency(event.target.value) }} />
+            </Col>
+          </Row>
+          <Row className="mt-4 align-items-center">
+            <Col>Plan length:</Col>
+            <Col>
+              <RadioButtonGroup name="planLength" options={planLengthOptions} selectedOption={selectedPlanLength} handleChange={(event) => { setSelectedPlanLength(event.target.value) }} />
+            </Col>
+          </Row>
+          <Row className="mt-4 align-items-center">
+            <Col>Starting date:</Col>
+            <Col>
+              <Form.Control type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </Col>
+          </Row>
+          <Row className="mt-4 align-items-center">
+            <Col>
+              <Button variant="primary" disabled={startDate === ""} onClick={createPlan}>Create Plan</Button>
+            </Col>
+          </Row>
+        </Container>
+      }
+
+      {userId && !loadingWorkouts && workouts.length > 0 &&
+        <Container className="border border-primary rounded mt-4 p-4">
+          <Calendar highlightDates={workouts.map((workout) => workout.date)} greenDates={workouts.map((workout) => workout.completed ? workout.date : null)} handleClick={(date) => { setSelectedWorkout(workouts.find((workout) => workout.date.toDateString() === date.toDateString())) }} />
+        </Container>
       }
 
       {selectedWorkout &&
