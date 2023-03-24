@@ -11,14 +11,14 @@ const LoginCard = () => {
                     <Button
                         className="my-3"
                         variant="primary"
-                        onClick={() => window.open('/.auth/login/aad')}
+                        onClick={() => window.open('/.auth/login/aad', '_self')}
                     >
                         <FaMicrosoft /> Microsoft
                     </Button>
                     <Button
                         className="my-3"
                         variant="danger"
-                        onClick={() => window.open('/.auth/login/google')}
+                        onClick={() => window.open('/.auth/login/google', '_self')}
                     >
                         <FaGoogle /> Google
                     </Button>
