@@ -17,9 +17,7 @@
     "host": {
       "mode": "production",
       "cors": {
-        "origins": [
-          "http://localhost:4280"
-        ],
+        "origins": [],
         "allow-credentials": false
       },
       "authentication": {
@@ -35,7 +33,7 @@
           "actions": [
             "*"
           ],
-          "role": "anonymous"
+          "role": "authenticated"
         }
       ]
     }

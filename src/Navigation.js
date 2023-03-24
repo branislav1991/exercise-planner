@@ -9,8 +9,6 @@ const Navigation = ({ onReset, onLoad, onSave, user }) => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        <Nav.Link onClick={onLoad}>Load</Nav.Link>
-                        <Nav.Link onClick={onSave}>Save</Nav.Link>
                         <Nav.Link onClick={onReset}>Reset</Nav.Link>
                     </Nav>
                     {!user && (

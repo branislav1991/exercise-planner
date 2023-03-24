@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
+import { Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
 import './App.css';
 import RadioButtonGroup from './RadioButtonGroup';
 import Calendar from './Calendar';
 import Navigation from './Navigation';
+import LoginCard from './LoginCard';
+import LoadingCard from './LoadingCard';
 import { v4 as uuidv4 } from 'uuid';
 
 function App() {
@@ -22,11 +24,10 @@ function App() {
   const [selectedExerciseType, setSelectedExerciseType] = useState('');
   const [selectedExerciseSet, setSelectedExerciseSet] = useState(null);
   const [selectedExerciseReps, setSelectedExerciseReps] = useState(null);
-  const [showFileOpenAlert, setShowFileOpenAlert] = useState(false);
-  const [showFileSaveAlert, setShowFileSaveAlert] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState(null);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -36,173 +37,174 @@ function App() {
         const { clientPrincipal } = payload;
         if (clientPrincipal) {
           setUserId(clientPrincipal.userId);
-          setUserName(clientPrincipal.userDetails)
+          setUserName(clientPrincipal.userDetails);
+
+          // Load workouts for user
+          setLoadingWorkouts(true);
         }
       } catch (error) {
         console.error(error);
       }
     };
     getUser();
-
-    // const getWorkouts = async () => {
-    //   const gql = `
-    //   {
-    //     workouts(filter: {userId: {eq: "anonymous"}}) {
-    //       items {
-    //         id
-    //         name
-    //         key
-    //         userId
-    //         date
-    //         completed
-    //         exercises
-    //       }
-    //     }
-    //   }`;
-
-    //   const endpoint = "/data-api/graphql";
-    //   const response = await fetch(endpoint, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ query: gql })
-    //   });
-    //   const result = await response.json();
-    //   console.table(result.data.workouts.items);
-    // };
-    // getWorkouts();
-
-    // // Update workout
-    // const updateWorkouts = async () => {
-    //   const id = "1"
-    //   const data = {
-    //     id: id,
-    //     name: "Workout 1",
-    //     key: "workout-1",
-    //     userId: "Albert",
-    //     date: "2021-01-01",
-    //     completed: true,
-    //     exercises: JSON.stringify([
-    //       {
-    //         name: "Push Ups",
-    //         sets: "3",
-    //         reps: "10"
-    //       }
-    //     ])
-    //   };
-
-    //   const gql = `
-    //     mutation update($id: ID!, $_partitionKeyValue: String!, $item: UpdateWorkoutInput!) {
-    //       updateWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue, item: $item) {
-    //         id
-    //         name
-    //         key
-    //         userId
-    //         date
-    //         completed
-    //         exercises
-    //       }
-    //     }`;
-
-    //   const query = {
-    //     query: gql,
-    //     variables: {
-    //       id: id,
-    //       _partitionKeyValue: id,
-    //       item: data
-    //     }
-    //   };
-
-    //   const endpoint = "/data-api/graphql";
-    //   const res = await fetch(endpoint, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(query)
-    //   });
-
-    //   const result = await res.json();
-    //   console.table(result.data.updateWorkout);
-    // };
-    // updateWorkouts();
-
-    // // Create workout
-    // const newUuid = uuidv4();
-    // const createWorkout = async () => {
-    //   const data = {
-    //     id: newUuid,
-    //     name: "Workout 2",
-    //     key: "workout-2",
-    //     userId: "Roberto",
-    //     date: "2021-01-02",
-    //     completed: true,
-    //     exercises: JSON.stringify([
-    //       {
-    //         name: "Cat-Cow",
-    //         sets: "3",
-    //         reps: "10"
-    //       }
-    //     ])
-    //   };
-
-    //   const gql = `
-    //     mutation create($item: CreateWorkoutInput!) {
-    //       createWorkout(item: $item) {
-    //         id
-    //         name
-    //         key
-    //         userId
-    //         date
-    //         completed
-    //         exercises
-    //       }
-    //     }`;
-
-    //   const query = {
-    //     query: gql,
-    //     variables: {
-    //       item: data
-    //     }
-    //   };
-
-    //   const endpoint = "/data-api/graphql";
-    //   const result = await fetch(endpoint, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(query)
-    //   });
-
-    //   const response = await result.json();
-    //   console.table(response.data.createPerson);
-    // };
-    // createWorkout();
-
-    // const deleteWorkout = async () => {
-    //   const gql = `
-    //     mutation del($id: ID!, $_partitionKeyValue: String!) {
-    //       deleteWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue) {
-    //         id
-    //       }
-    //     }`;
-
-    //   const query = {
-    //     query: gql,
-    //     variables: {
-    //       id: newUuid,
-    //       _partitionKeyValue: newUuid
-    //     }
-    //   };
-
-    //   const endpoint = "/data-api/graphql";
-    //   const response = await fetch(endpoint, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(query)
-    //   });
-
-    //   const result = await response.json();
-    //   console.log(`Record deleted: ${JSON.stringify(result.data)}`);
-    // };
-    // deleteWorkout();
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      // Get all workouts for user
+      const getWorkouts = async () => {
+        const gql = `
+        {
+          workouts(filter: {userId: {eq: "${userId}"}}) {
+            items {
+              id
+              name
+              key
+              userId
+              date
+              completed
+              exercises
+            }
+          }
+        }`;
+
+        try {
+          const endpoint = "/data-api/graphql";
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: gql })
+          });
+          const result = await response.json();
+          const userWorkouts = result.data.workouts.items;
+
+          // Convert exercises strings to objects
+          const userExercises = [];
+          userWorkouts.forEach((workout) => {
+            workout.date = new Date(workout.date);
+            const workoutExercises = JSON.parse(workout.exercises);
+            userExercises.push(...workoutExercises);
+            delete workout.exercises;
+          });
+
+          setWorkouts(userWorkouts);
+          setExercises(userExercises);
+          setSelectedWorkout(null);
+          setLoadingWorkouts(false);
+
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      getWorkouts();
+    }
+  }, [userId]);
+
+  const createWorkoutInDb = async (workout) => {
+    const gql = `
+      mutation create($item: CreateWorkoutInput!) {
+        createWorkout(item: $item) {
+          id
+          name
+          key
+          userId
+          date
+          completed
+          exercises
+        }
+      }`;
+
+    // Find all exercises in the workout and add them to the workout object
+    const workoutExercises = exercises.filter((exercise) => exercise.workoutId === workout.id);
+    workout.exercises = JSON.stringify(workoutExercises);
+
+    const query = {
+      query: gql,
+      variables: {
+        item: workout
+      }
+    };
+
+    try {
+      const endpoint = "/data-api/graphql";
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(query)
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const updateWorkout = async (workout, exercises) => {
+    const workoutCopy = { ...workout };
+    const id = workoutCopy.id
+    workoutCopy.exercises = JSON.stringify(exercises.filter((exercise) => exercise.workout === workoutCopy.id));
+
+    const gql = `
+        mutation update($id: ID!, $_partitionKeyValue: String!, $item: UpdateWorkoutInput!) {
+          updateWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue, item: $item) {
+            id
+            name
+            key
+            userId
+            date
+            completed
+            exercises
+          }
+        }`;
+
+    const query = {
+      query: gql,
+      variables: {
+        id: id,
+        _partitionKeyValue: id,
+        item: workoutCopy
+      }
+    };
+
+    try {
+      const endpoint = "/data-api/graphql";
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(query)
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteAllWorkouts = () => {
+    workouts.forEach(async (workout) => {
+      const gql = `
+        mutation del($id: ID!, $_partitionKeyValue: String!) {
+          deleteWorkout(id: $id, _partitionKeyValue: $_partitionKeyValue) {
+            id
+          }
+        }`;
+
+      const query = {
+        query: gql,
+        variables: {
+          id: workout.id,
+          _partitionKeyValue: workout.id
+        }
+      };
+
+      try {
+        const endpoint = "/data-api/graphql";
+        await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(query)
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
 
   const createPlan = () => {
     let newWorkouts = [];
@@ -215,10 +217,19 @@ function App() {
       newWorkouts.push({ id: uuidv4(), userId: userId, name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false });
     }
     setWorkouts(newWorkouts);
+
+    if (userId) {
+      newWorkouts.forEach((workout) => createWorkoutInDb(workout));
+    }
   };
 
   const addExercise = () => {
-    setExercises([...exercises, { name: selectedExerciseType, workout: selectedWorkout.id, sets: selectedExerciseSet, reps: selectedExerciseReps }]);
+    const newExercises = [...exercises, { name: selectedExerciseType, workout: selectedWorkout.id, sets: selectedExerciseSet, reps: selectedExerciseReps }];
+    setExercises(newExercises);
+
+    if (userId) {
+      updateWorkout(selectedWorkout, newExercises);
+    }
   };
 
   const setWorkoutCompleted = () => {
@@ -231,44 +242,11 @@ function App() {
       }
     });
     setWorkouts(newWorkouts);
-    setSelectedWorkout(newWorkouts.find((workout) => workout.id === selectedWorkout.id));
-  }
+    const newSelectedWorkout = newWorkouts.find((workout) => workout.id === selectedWorkout.id);
+    setSelectedWorkout(newSelectedWorkout);
 
-  const loadPlanFromFile = async () => {
-    try {
-      const [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'Exercise Planner Files', accept: { 'application/json': ['.json'] } }] });
-      const file = await fileHandle.getFile();
-      const text = await file.text();
-      const plan = JSON.parse(text);
-      plan.workouts.map((workout) => {
-        workout.date = new Date(workout.date);
-        return workout;
-      });
-      setWorkouts(plan.workouts);
-      setExercises(plan.exercises);
-      setSelectedWorkout(null);
-    } catch (e) {
-      setShowFileOpenAlert(true);
-      console.log(e);
-    }
-  }
-
-  const savePlanToFile = async () => {
-    try {
-      const plan = { workouts, exercises };
-      const fileHandle = await window.showSaveFilePicker({
-        types: [{
-          description: 'Exercise Planner Files',
-          accept: {
-            'application/json': ['.json'],
-          },
-        }],
-      });
-      const writable = await fileHandle.createWritable();
-      await writable.write(JSON.stringify(plan));
-      await writable.close();
-    } catch (e) {
-      setShowFileSaveAlert(true);
+    if (userId) {
+      updateWorkout(newSelectedWorkout, exercises);
     }
   }
 
@@ -284,7 +262,11 @@ function App() {
             Cancel
           </Button>
           <Button variant="danger" onClick={() => {
-            setWorkouts({});
+            if (userId) {
+              deleteAllWorkouts();
+            }
+
+            setWorkouts([]);
             setExercises([]);
             setSelectedWorkout(null);
             setShowReset(false);
@@ -294,50 +276,71 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      <Navigation user={userName} onReset={() => { setShowReset(true); }} onLoad={loadPlanFromFile} onSave={savePlanToFile} />
-      <Alert className='rounded-0' key='file-open-alert' variant='danger' show={showFileOpenAlert} onClose={() => setShowFileOpenAlert(false)} dismissible>
-        <Alert.Heading>Error opening file</Alert.Heading>
-        Please check if the file you are trying to load was saved using the exercise planner
-      </Alert>
-      <Alert className='rounded-0' key='file-save-alert' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
+      {/* <Alert className='rounded-0' key='file-save-alert' variant='danger' show={showFileSaveAlert} onClose={() => setShowFileSaveAlert(false)} dismissible>
         <Alert.Heading>Error saving file</Alert.Heading>
         Please try again
-      </Alert>
+      </Alert> */}
 
       {
-        workouts.length === 0 &&
-        <Container className="border border-primary rounded mt-4 p-4">
-          <Row className="align-items-center">
-            <Col>Workout frequency:</Col>
-            <Col>
-              <RadioButtonGroup name="frequency" options={frequencyOptions} selectedOption={selectedFrequency} handleChange={(event) => { setSelectedFrequency(event.target.value) }} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>Plan length:</Col>
-            <Col>
-              <RadioButtonGroup name="planLength" options={planLengthOptions} selectedOption={selectedPlanLength} handleChange={(event) => { setSelectedPlanLength(event.target.value) }} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>Starting date:</Col>
-            <Col>
-              <Form.Control type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>
-              <Button variant="primary" disabled={startDate === ""} onClick={createPlan}>Create Plan</Button>
-            </Col>
-          </Row>
+        !userId &&
+        <Container
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
+        >
+          <LoginCard />
         </Container>
       }
+
       {
-        workouts.length > 0 &&
-        <Container className="border border-primary rounded mt-4 p-4">
-          <Calendar highlightDates={workouts.map((workout) => workout.date)} greenDates={workouts.map((workout) => workout.completed ? workout.date : null)} handleClick={(date) => { setSelectedWorkout(workouts.find((workout) => workout.date.toDateString() === date.toDateString())) }} />
-        </Container>
+        userId && loadingWorkouts &&
+        <LoadingCard />
       }
+
+      {
+        userId && !loadingWorkouts &&
+        <>
+          <Navigation user={userName} onReset={() => { setShowReset(true); }} />
+
+          {workouts.length === 0 &&
+            <Container className="border border-primary rounded mt-4 p-4">
+              <Row className="align-items-center">
+                <Col>Workout frequency:</Col>
+                <Col>
+                  <RadioButtonGroup name="frequency" options={frequencyOptions} selectedOption={selectedFrequency} handleChange={(event) => { setSelectedFrequency(event.target.value) }} />
+                </Col>
+              </Row>
+              <Row className="mt-4 align-items-center">
+                <Col>Plan length:</Col>
+                <Col>
+                  <RadioButtonGroup name="planLength" options={planLengthOptions} selectedOption={selectedPlanLength} handleChange={(event) => { setSelectedPlanLength(event.target.value) }} />
+                </Col>
+              </Row>
+              <Row className="mt-4 align-items-center">
+                <Col>Starting date:</Col>
+                <Col>
+                  <Form.Control type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+                </Col>
+              </Row>
+              <Row className="mt-4 align-items-center">
+                <Col>
+                  <Button variant="primary" disabled={startDate === ""} onClick={createPlan}>Create Plan</Button>
+                </Col>
+              </Row>
+            </Container>
+          }
+          {
+            workouts.length > 0 &&
+            <Container className="border border-primary rounded mt-4 p-4">
+              <Calendar highlightDates={workouts.map((workout) => workout.date)} greenDates={workouts.map((workout) => workout.completed ? workout.date : null)} handleClick={(date) => { setSelectedWorkout(workouts.find((workout) => workout.date.toDateString() === date.toDateString())) }} />
+            </Container>
+          }
+        </>
+      }
+
       {selectedWorkout &&
         <Container className="border border-primary rounded mt-4 p-4">
           <Row className="align-items-center">
