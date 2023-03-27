@@ -19,11 +19,17 @@ const ExerciseList = ({ exercises, onRemove, onDragEnd, dragDisabled }) => {
                     {...provided.dragHandleProps}
                     ref={provided.innerRef}
                     active={hoveringId === exercise.id && !dragDisabled}
+                    variant={exercise.isGroupHeader ? 'secondary' : 'light'}
                     onMouseEnter={() => setHoveringId(exercise.id)}
                     onMouseLeave={() => setHoveringId(null)}
                   >
                     <Stack direction="horizontal" gap={3}>
-                      <span>{exercise.name} - {exercise.sets} Sets @ {exercise.reps} Reps</span>
+                      {('isGroupHeader' in exercise) && exercise.isGroupHeader &&
+                        <h4 className='my-auto'>{exercise.name}</h4>
+                      }
+                      {(!('isGroupHeader' in exercise) || !exercise.isGroupHeader) &&
+                        <span>{exercise.name} - {exercise.sets} Sets @ {exercise.reps} Reps</span>
+                      }
                       {!dragDisabled &&
                         <Button className='ms-auto' variant="danger" onClick={() => onRemove(exercise.id)}>
                           <FaTrash />

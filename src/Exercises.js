@@ -56,15 +56,24 @@ function Exercises({ selectedWorkout, onUpdate }) {
   const [selectedExerciseType, setSelectedExerciseType] = useState('');
   const [selectedExerciseSet, setSelectedExerciseSet] = useState(null);
   const [selectedExerciseReps, setSelectedExerciseReps] = useState(null);
+  const [newGroupName, setNewGroupName] = useState('');
 
   const addExercise = () => {
-    const newWorkout = { ...selectedWorkout, exercises: [...selectedWorkout.exercises, { id: uuidv4(), name: selectedExerciseType, sets: selectedExerciseSet, reps: selectedExerciseReps }] };
+    const newWorkout = { ...selectedWorkout, exercises: [...selectedWorkout.exercises, { id: uuidv4(), name: selectedExerciseType, sets: selectedExerciseSet, reps: selectedExerciseReps, isGroupHeader: false }] };
     onUpdate(newWorkout);
   };
 
   const removeExercise = (id) => {
     const newWorkout = { ...selectedWorkout, exercises: selectedWorkout.exercises.filter((ex) => ex.id !== id) };
     onUpdate(newWorkout);
+  };
+
+  const addGroupHeader = () => {
+    // We define group headers as exercises with the isGroupHeader flag set to true
+    // and no sets or reps
+    const newWorkout = { ...selectedWorkout, exercises: [...selectedWorkout.exercises, { id: uuidv4(), name: newGroupName, isGroupHeader: true }] };
+    onUpdate(newWorkout);
+    setNewGroupName('');
   };
 
   const setWorkoutCompleted = () => {
@@ -120,9 +129,17 @@ function Exercises({ selectedWorkout, onUpdate }) {
                   <RadioButtonGroup name="exerciseReps" options={exerciseRepsOptions} selectedOption={selectedExerciseReps} handleChange={(event) => { setSelectedExerciseReps(event.target.value) }} />
                 </Col>
               </Row>
-              <Row className="mt-4 align-items-center">
+              <Row className="my-4 align-items-center">
                 <Col>
-                  <Button variant="primary" disabled={selectedExerciseType === '' || selectedExerciseSet === null || selectedExerciseReps === null} onClick={addExercise}>Add Exercise</Button>
+                  <Button variant="primary" disabled={selectedExerciseType === '' || selectedExerciseSet === null || selectedExerciseReps === null} onClick={() => addExercise()}>Add Exercise</Button>
+                </Col>
+              </Row>
+              <Row className="align-items-center border-top border-primary">
+                <Col>
+                  <Form className='mt-4'>
+                    <Form.Control type="text" placeholder="Group name" value={newGroupName} onChange={(event) => setNewGroupName(event.target.value)} />
+                    <Button variant="primary" className='mt-4' onClick={() => addGroupHeader()}>Add group header</Button>
+                  </Form>
                 </Col>
               </Row>
             </Container>
