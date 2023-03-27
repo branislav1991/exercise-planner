@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Row, Col, Container, Form, Stack, Modal } from 'react-bootstrap';
+import { Alert, Button, Row, Col, Container, Form, Modal } from 'react-bootstrap';
 import './App.css';
 import RadioButtonGroup from './RadioButtonGroup';
 import Calendar from './Calendar';
@@ -7,68 +7,17 @@ import Navigation from './Navigation';
 import LoginCard from './LoginCard';
 import LoadingCard from './LoadingCard';
 import { v4 as uuidv4 } from 'uuid';
-import { FaTrash } from 'react-icons/fa';
+import Exercises from './Exercises';
 
 function App() {
   const frequencyOptions = [{ 'label': '3x', 'value': '3' }, { 'label': '4x', 'value': '4' }, { 'label': '5x', 'value': '5' }]
   const planLengthOptions = [{ 'label': '8 Weeks', 'value': '8' }, { 'label': '12 Weeks', 'value': '12' }, { 'label': '16 Weeks', 'value': '16' }]
-  const exerciseTypes = [
-    'Pull-ups',
-    'Chin-ups',
-    'Dips',
-    'Dead Bugs',
-    'Cossack squats',
-    'Split squats',
-    'Side lunges',
-    'High jumps',
-    'Side plank rotations',
-    'High plank rotations',
-    'Russian twists',
-    'Diamond pushups',
-    'Leg raises',
-    'Reverse crunches',
-    'V-ups',
-    'Supermans',
-    'Inverted rows',
-    'Glute bridges',
-    'Plank leg lifts',
-    'Skipping Jumps',
-    'Burpees',
-    'Squats',
-    'Push Ups',
-    'Sit Ups',
-    'Plank',
-    'Jumping Jacks',
-    'Lunges',
-    'Mountain Climbers',
-    'Jump Squats',
-    'Jumping Lunges',
-    'Cat-Cow',
-    'Down Dog to Cobra',
-    'Assisted Standups',
-    'Table Twists',
-    'Climbers',
-    'Bicep Curls',
-    'Forearm Curls',
-    'One-Arm Pushups',
-    'Wide-grip pull-ups',
-    'Single-leg glute bridges',
-    'Hanging leg raises',
-    'Muscle-ups',
-    'Pistol squats',
-    'Archer Pushups']
-  const exerciseSetOptions = [{ 'label': '1', 'value': '1' }, { 'label': '2', 'value': '2' }, { 'label': '3', 'value': '3' }, { 'label': '4', 'value': '4' }, { 'label': '5', 'value': '5' }, { 'label': '6', 'value': '6' }]
-  const exerciseRepsOptions = [{ 'label': '3', 'value': '3' }, { 'label': '4', 'value': '4' }, { 'label': '5', 'value': '5' }, { 'label': '6', 'value': '6' }, { 'label': '8', 'value': '8' }, { 'label': '10', 'value': '10' }, { 'label': '12', 'value': '12' }, { 'label': '16', 'value': '16' }, { 'label': '20', 'value': '20' }, { 'label': '25', 'value': '25' }, { 'label': '30', 'value': '30' }, { 'label': '40', 'value': '40' }, { 'label': '50', 'value': '50' }]
 
-  const [exercises, setExercises] = useState([]);
   const [workouts, setWorkouts] = useState([]);
   const [selectedFrequency, setSelectedFrequency] = useState(frequencyOptions[0].value);
   const [selectedPlanLength, setSelectedPlanLength] = useState(planLengthOptions[0].value);
   const [startDate, setStartDate] = useState('');
   const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [selectedExerciseType, setSelectedExerciseType] = useState('');
-  const [selectedExerciseSet, setSelectedExerciseSet] = useState(null);
-  const [selectedExerciseReps, setSelectedExerciseReps] = useState(null);
   const [showReset, setShowReset] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState(null);
@@ -128,16 +77,12 @@ function App() {
           const userWorkouts = result.data.workouts.items;
 
           // Convert exercises strings to objects
-          const userExercises = [];
           userWorkouts.forEach((workout) => {
             workout.date = new Date(workout.date);
-            const workoutExercises = JSON.parse(workout.exercises);
-            userExercises.push(...workoutExercises);
-            delete workout.exercises;
+            workout.exercises = JSON.parse(workout.exercises);
           });
 
           setWorkouts(userWorkouts);
-          setExercises(userExercises);
           setSelectedWorkout(null);
           setLoadingWorkouts(false);
         } catch (error) {
@@ -163,14 +108,13 @@ function App() {
         }
       }`;
 
-    // Find all exercises in the workout and add them to the workout object
-    const workoutExercises = exercises.filter((exercise) => exercise.workoutId === workout.id);
-    workout.exercises = JSON.stringify(workoutExercises);
+    const workoutCopy = { ...workout };
+    workoutCopy.exercises = JSON.stringify(workoutCopy.exercises);
 
     const query = {
       query: gql,
       variables: {
-        item: workout
+        item: workoutCopy
       }
     };
 
@@ -187,10 +131,27 @@ function App() {
     }
   };
 
-  const updateWorkout = async (workout, exercises) => {
-    const workoutCopy = { ...workout };
-    const id = workoutCopy.id
-    workoutCopy.exercises = JSON.stringify(exercises.filter((exercise) => exercise.workout === workoutCopy.id));
+  const updateSelectedWorkout = async (updatedWorkout) => {
+    if (!userId) {
+      // User is not logged in
+      return;
+    }
+
+    const newWorkouts = workouts.map((workout) => {
+      if (workout.id === selectedWorkout.id) {
+        return updatedWorkout;
+      }
+      else {
+        return workout;
+      }
+    });
+    setWorkouts(newWorkouts);
+    const newSelectedWorkout = newWorkouts.find((workout) => workout.id === selectedWorkout.id);
+    setSelectedWorkout(newSelectedWorkout);
+
+    const updatedWorkoutCopy = { ...updatedWorkout };
+    const id = updatedWorkoutCopy.id
+    updatedWorkoutCopy.exercises = JSON.stringify(updatedWorkoutCopy.exercises);
 
     const gql = `
         mutation update($id: ID!, $_partitionKeyValue: String!, $item: UpdateWorkoutInput!) {
@@ -210,7 +171,7 @@ function App() {
       variables: {
         id: id,
         _partitionKeyValue: id,
-        item: workoutCopy
+        item: updatedWorkoutCopy
       }
     };
 
@@ -266,7 +227,7 @@ function App() {
       const currentDate = new Date(startDate);
       currentDate.setDate(currentDate.getDate() + i * 7 / selectedFrequencyInt);
       currentDate.setHours(0, 0, 0, 0);
-      newWorkouts.push({ id: uuidv4(), userId: userId, name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false });
+      newWorkouts.push({ id: uuidv4(), userId: userId, name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false, exercises: [] });
     }
     setWorkouts(newWorkouts);
 
@@ -274,42 +235,6 @@ function App() {
       newWorkouts.forEach((workout) => createWorkoutInDb(workout));
     }
   };
-
-  const addExercise = () => {
-    const newExercises = [...exercises, { id: uuidv4(), name: selectedExerciseType, workout: selectedWorkout.id, sets: selectedExerciseSet, reps: selectedExerciseReps }];
-    setExercises(newExercises);
-
-    if (userId) {
-      updateWorkout(selectedWorkout, newExercises);
-    }
-  };
-
-  const removeExercise = (id) => {
-    const newExercises = exercises.filter((ex) => ex.id !== id);
-    setExercises(newExercises);
-
-    if (userId) {
-      updateWorkout(selectedWorkout, newExercises);
-    }
-  };
-
-  const setWorkoutCompleted = () => {
-    const newWorkouts = workouts.map((workout) => {
-      if (workout.id === selectedWorkout.id) {
-        return { ...workout, completed: !workout.completed };
-      }
-      else {
-        return workout;
-      }
-    });
-    setWorkouts(newWorkouts);
-    const newSelectedWorkout = newWorkouts.find((workout) => workout.id === selectedWorkout.id);
-    setSelectedWorkout(newSelectedWorkout);
-
-    if (userId) {
-      updateWorkout(newSelectedWorkout, exercises);
-    }
-  }
 
   return (
     <>
@@ -328,7 +253,6 @@ function App() {
             }
 
             setWorkouts([]);
-            setExercises([]);
             setSelectedWorkout(null);
             setShowReset(false);
           }}>
@@ -408,60 +332,7 @@ function App() {
       }
 
       {selectedWorkout &&
-        <Container className="border border-primary rounded mt-4 p-4">
-          <Row className="align-items-center">
-            <Col>
-              <h3>{selectedWorkout.name} - {selectedWorkout.date.toDateString()}</h3>
-            </Col>
-            <Col md="auto">
-              <Form.Check type="switch" id="workout-complete-switch" label="Completed" checked={selectedWorkout.completed} onChange={setWorkoutCompleted} />
-            </Col>
-          </Row>
-          {!selectedWorkout.completed &&
-            <Row className="mt-4 align-items-center">
-              <Col>
-                <Container className="border border-primary rounded p-4">
-                  <Row className="align-items-center">
-                    <Col>
-                      <Form.Select value={selectedExerciseType} onChange={(event) => { setSelectedExerciseType(event.target.value) }}>
-                        <option key='blankExercise' hidden value=''> --Select exercise type-- </option>
-                        {exerciseTypes.map((exercise, index) => <option key={index}>{exercise}</option>)}
-                      </Form.Select>
-                    </Col>
-                  </Row>
-                  <Row className="mt-4 align-items-center">
-                    <Col>Number of sets:</Col>
-                    <Col>
-                      <RadioButtonGroup name="exerciseSets" options={exerciseSetOptions} selectedOption={selectedExerciseSet} handleChange={(event) => { setSelectedExerciseSet(event.target.value) }} />
-                    </Col>
-                  </Row>
-                  <Row className="mt-4 align-items-center">
-                    <Col>Number of reps:</Col>
-                    <Col>
-                      <RadioButtonGroup name="exerciseReps" options={exerciseRepsOptions} selectedOption={selectedExerciseReps} handleChange={(event) => { setSelectedExerciseReps(event.target.value) }} />
-                    </Col>
-                  </Row>
-                  <Row className="mt-4 align-items-center">
-                    <Col>
-                      <Button variant="primary" disabled={selectedExerciseType === '' || selectedExerciseSet === null || selectedExerciseReps === null} onClick={addExercise}>Add Exercise</Button>
-                    </Col>
-                  </Row>
-                </Container>
-              </Col>
-            </Row>
-          }
-          <Row className="mt-4 align-items-center">
-            <Col>
-              <Stack gap={3}>
-                {exercises.map((exercise, index) => (exercise.workout === selectedWorkout.id) ?
-                  <Stack direction='horizontal' gap={3} key={index}>
-                    <span>{exercise.name} - {exercise.sets} Sets @ {exercise.reps} Reps</span>
-                    <Button className='my-auto' variant="outline-danger" onClick={() => removeExercise(exercise.id)}><FaTrash /></Button>
-                  </Stack> : null)}
-              </Stack>
-            </Col>
-          </Row>
-        </Container>
+        <Exercises selectedWorkout={selectedWorkout} onUpdate={(workout) => updateSelectedWorkout(workout)} />
       }
     </>
   );
