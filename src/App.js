@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Row, Col, Container, Form, Modal } from 'react-bootstrap';
+import { Alert, Button, Container, Modal } from 'react-bootstrap';
 import './App.css';
-import RadioButtonGroup from './RadioButtonGroup';
+import { v4 as uuidv4 } from 'uuid';
 import Calendar from './Calendar';
 import Navigation from './Navigation';
 import LoginCard from './LoginCard';
 import LoadingCard from './LoadingCard';
-import { v4 as uuidv4 } from 'uuid';
 import Exercises from './Exercises';
+import NewPlanDialog from './NewPlanDialog';
 
 function App() {
-  const frequencyOptions = [{ 'label': '3x', 'value': '3' }, { 'label': '4x', 'value': '4' }, { 'label': '5x', 'value': '5' }]
-  const planLengthOptions = [{ 'label': '8 Weeks', 'value': '8' }, { 'label': '12 Weeks', 'value': '12' }, { 'label': '16 Weeks', 'value': '16' }]
-
   const [workouts, setWorkouts] = useState([]);
-  const [selectedFrequency, setSelectedFrequency] = useState(frequencyOptions[0].value);
-  const [selectedPlanLength, setSelectedPlanLength] = useState(planLengthOptions[0].value);
-  const [startDate, setStartDate] = useState('');
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [showReset, setShowReset] = useState(false);
   const [userId, setUserId] = useState(null);
@@ -219,13 +213,11 @@ function App() {
     });
   }
 
-  const createPlan = () => {
+  const createPlan = (length, frequency, startDate) => {
     let newWorkouts = [];
-    const selectedPlanLengthInt = parseInt(selectedPlanLength);
-    const selectedFrequencyInt = parseInt(selectedFrequency);
-    for (let i = 0; i < selectedPlanLengthInt * selectedFrequencyInt; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(currentDate.getDate() + i * 7 / selectedFrequencyInt);
+    for (let i = 0; i < length * frequency; i++) {
+      let currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i * 7 / frequency);
       currentDate.setHours(0, 0, 0, 0);
       newWorkouts.push({ id: uuidv4(), userId: userId, name: `Workout ${i + 1}`, key: `workout-${i + 1}`, date: currentDate, completed: false, exercises: [] });
     }
@@ -298,31 +290,7 @@ function App() {
       </Alert>
 
       {userId && !loadingWorkouts && workouts.length === 0 &&
-        <Container className="border border-primary rounded mt-4 p-4">
-          <Row className="align-items-center">
-            <Col>Workout frequency:</Col>
-            <Col>
-              <RadioButtonGroup name="frequency" options={frequencyOptions} selectedOption={selectedFrequency} handleChange={(event) => { setSelectedFrequency(event.target.value) }} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>Plan length:</Col>
-            <Col>
-              <RadioButtonGroup name="planLength" options={planLengthOptions} selectedOption={selectedPlanLength} handleChange={(event) => { setSelectedPlanLength(event.target.value) }} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>Starting date:</Col>
-            <Col>
-              <Form.Control type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-            </Col>
-          </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>
-              <Button variant="primary" disabled={startDate === ""} onClick={createPlan}>Create Plan</Button>
-            </Col>
-          </Row>
-        </Container>
+        <NewPlanDialog onCreate={createPlan} />
       }
 
       {userId && !loadingWorkouts && workouts.length > 0 &&
